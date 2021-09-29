@@ -22,5 +22,9 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.users = require("./users.js")(sequelize, Sequelize);
-db.users.sync();
+db.passwords = require("./passwords.js")(sequelize, Sequelize);
+
+db.users.hasMany(db.passwords);
+db.passwords.belongsTo(db.users);
+
 module.exports = db;

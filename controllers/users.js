@@ -3,6 +3,7 @@ const Users = db.users;
 const bcrypt = require("bcrypt");
 
 const { registerValidation, loginValidation } = require("../models/validation");
+const jwt = require("jsonwebtoken");
 
 // creation d'un utilisateur.
 exports.create = async (req, res) => {
@@ -42,21 +43,20 @@ exports.create = async (req, res) => {
 };
 
 exports.login = async (req, res, next) => {
-    // //  Verification data
-    // const { error } = loginValidation(req.body);
-    // if (error) res.status(400).send(error.message);
-    // //  check if emailExist
+    //  Verification data
+    const { error } = loginValidation(req.body);
+    if (error) res.status(400).send(error.message);
+    //  check if emailExist
 
-    // const user = await Users.findOne({ where: { email: req.body.email } });
-    // //  Vague message so as not to indicate if it's the e-mail or the password which is incorrect
+    const user = await Users.findOne({ where: { email: req.body.email } });
+    //  Vague message so as not to indicate if it's the e-mail or the password which is incorrect
 
-    // if (!user) res.status(400).send("Email ou mot de passe incorrect.");
+    if (!user) res.status(400).send("Email ou mot de passe incorrect.");
 
-    // const validPassword = await bcrypt.compare(req.body.password, user.password);
-    // if (!validPassword) return res.status(400).send("Email ou mot de passe incorrect.");
+    const validPassword = await bcrypt.compare(req.body.password, user.password);
+    if (!validPassword) return res.status(400).send("Email ou mot de passe incorrect.");
 
-    passport.authenticate("local", {
-        successRedirect: "/dashboard",
-        failureRedirect: "/users/login",
-    })(req, res, next);
+    //  Create and assign a token
+    const token = jwt.sign({ id: user.id, firstname: user.firstname, lastname: user.lastname, email: user.email }, process.env.TOKEN_SECRET);
+    return res.header("auth-token", token).send({ token: token }).status(200);
 };

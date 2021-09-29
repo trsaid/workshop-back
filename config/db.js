@@ -1,10 +1,12 @@
+require("dotenv").config();
+
 module.exports = {
-    HOST: "localhost",
-    USER: "root",
-    PASSWORD: "",
-    DB: "workshop",
+    HOST: process.env.SESSIONSDB_HOST,
+    USER: process.env.SESSIONSDB_USER,
+    PASSWORD: process.env.SESSIONSDB_PASS,
+    DB: process.env.SESSIONSDB_DB,
     dialect: "mysql",
-    port: '3306',
+    port: process.env.SESSIONSDB_PORT,
     pool: {
         max: 5,
         min: 0,

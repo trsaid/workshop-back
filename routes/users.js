@@ -1,18 +1,14 @@
 var express = require("express");
 var router = express.Router();
 const users = require("../controllers/users");
-const passport = require("passport");
+const { isAuth } = require("../models/verifytoken");
 
 router.post("/register", users.create);
 
-router.post("/login", (req, res, next) => {
-    passport.authenticate("local", (err, user) => {
-        res.status(err ? 500 : 200).send(err ? err : user);
-    })(req, res, next);
-});
+router.post("/login", users.login);
 
-router.get("/test", (req, res) => {
-    res.status(200).send(res.user);
+router.get("/test", isAuth, (req, res, next) => {    
+    res.status(200).send(req.user);
 });
 
 //logout
