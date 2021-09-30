@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 
 const { registerValidation, loginValidation } = require("../models/validation");
 const jwt = require("jsonwebtoken");
+const dayjs = require("dayjs");
 
 // creation d'un utilisateur.
 exports.create = async (req, res) => {
@@ -58,5 +59,59 @@ exports.login = async (req, res, next) => {
 
     //  Create and assign a token
     const token = jwt.sign({ id: user.id, firstname: user.firstname, lastname: user.lastname, email: user.email }, process.env.TOKEN_SECRET);
+    res.cookie("auth-token", token, {
+        secure: false,
+        httpOnly: true,
+        expires: dayjs().add(30, "days").toDate(),
+    });
     return res.header("auth-token", token).send({ token: token }).status(200);
+};
+
+exports.updatePassword = async (req, res) => {
+    const id = req.params.id;
+
+    const user = await Users.findOne({ where: { id: req.user.id } });
+
+    let ciphertext = CryptoJS.AES.encrypt(req.body.password, user.password).toString();
+
+    Passwords.update(
+        { password: ciphertext },
+        {
+            where: { id: id },
+        }
+    )
+        .then(num => {
+            if (num == 1) {
+                res.status(200).send({
+                    message: `Le mot de passe ${id} a été mis à jour`,
+                });
+            } else {
+                res.status(400).send({
+                    message: `Erreur dans la mise à jour du mot de passe ${id}`,
+                });
+            }
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: `Impossible de mettre à jour le mot de passe ${id}`,
+            });
+        });
+};
+//Vérifie si un utilisateur est connecté
+exports.check = async (req, res) => {
+    let token = req.cookies["auth-token"];
+
+    if (!token) {
+        res.status(403).send({
+            message: `Token manquant.`,
+        });
+    }
+
+    try {
+        const verified = jwt.verify(token, process.env.TOKEN_SECRET); // verifie le token avec notre signature
+
+        res.status(200).send({ user: verified });
+    } catch (err) {
+        res.status(400).send("Invalid token");
+    }
 };

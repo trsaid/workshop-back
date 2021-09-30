@@ -7,6 +7,8 @@ router.post("/register", users.create);
 
 router.post("/login", users.login);
 
+router.get("/check", users.check);
+
 router.get("/test", isAuth, (req, res, next) => {    
     res.status(200).send(req.user);
 });
